@@ -247,4 +247,7 @@ dmypy.json
 pyvenv.cfg
 pip-selfcheck.json
 
+# Data files
+**/data
+
 # End of https://www.gitignore.io/api/git,venv,linux,python,pycharm
