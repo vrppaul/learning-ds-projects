@@ -1,28 +1,25 @@
-import tarfile
+from malicioius_urls.model.tar import Tar
 
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import classification_report
 from sklearn.datasets import load_svmlight_file
-import numpy as np
+from sklearn.metrics import classification_report
+from sklearn.linear_model import SGDClassifier
 
 
-uri = '/home/bss_pracant/learning/malicioius_urls/data/url_svmlight.tar.gz'
-tar = tarfile.open(uri, 'r:gz')
-max_observations = 0
-max_variables = 0
-i = 0
-split = 5
+MAX_FILES = 20
+TAR = Tar(uri='/home/bss_pracant/learning/malicioius_urls/data/url_svmlight.tar.gz',
+          classes=[-1, 1])
 
-for tarinfo in tar:
-    print(f'Extracting {tarinfo.name}, file size is {tarinfo.size}')
-    if tarinfo.isfile():
-        file = tar.extractfile(tarinfo.name)
-        X, y = load_svmlight_file(file)
-        max_variables = np.maximum(max_variables, X.shape[0])
-        max_observations = np.maximum(max_observations, X.shape[1])
+max_variables = Tar.get_maximum_variables(TAR.TAR, TAR.get_tar_files(MAX_FILES))
+print(f'\nMAX VARIABLES = {max_variables}')
 
-    if i > split:
-        break
-    i += 1
+sgd = SGDClassifier(loss='log')
 
-print(f'Max X = {max_observations}, max y dimension = {max_variables}')
+for index, tarinfo in enumerate(TAR.get_tar_files(MAX_FILES)):
+    file = TAR.TAR.extractfile(tarinfo.name)
+    X, y = load_svmlight_file(file, n_features=max_variables)
+    print(f'\nTraining on file #{index}')
+    sgd.partial_fit(X, y, classes=TAR.CLASSES)
+    
+    if index == MAX_FILES - 1:
+        print('\n---- TRAINING RESULTS ----')
+        print(classification_report(sgd.predict(X), y))
